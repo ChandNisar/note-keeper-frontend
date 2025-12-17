@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Smart Notes</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1d2671, #c33764);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 10px;
+}
+
+.container {
+  width: 100%;
+  max-width: 850px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.header h1 {
+  font-size: 2.2rem;
+  color: #1d2671;
+}
+
+.header p {
+  color: #555;
+}
+
+.form-card {
+  background: #f7f9fc;
+  padding: 20px;
+  border-radius: 18px;
+  margin-bottom: 30px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+input, textarea {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  font-size: 16px;
+}
+
+textarea {
+  height: 120px;
+  resize: none;
+}
+
+.btn-add {
+  padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1d2671, #c33764);
+  color: white;
+  border: none;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.notes-title {
+  font-size: 1.4rem;
+  margin-bottom: 15px;
+  color: #1d2671;
+  text-align: center;
+}
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.note {
+  background: white;
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.note h3 {
+  margin-bottom: 8px;
+  color: #1d2671;
+}
+
+.note p {
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.btn-delete {
+  margin-top: 12px;
+  width: 100%;
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 25px;
+  font-size: 0.85rem;
+  color: #888;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>📝 Smart Notes</h1>
+    <p>Vos idées, organisées avec style</p>
+  </div>
+
+  <!-- AJOUT NOTE -->
+  <div class="form-card">
+    <div class="form-group">
+      <input type="text" id="title" placeholder="Titre de la note">
+      <textarea id="content" placeholder="Contenu de la note"></textarea>
+      <button class="btn-add" onclick="addNote()">➕ Ajouter une note</button>
+    </div>
+  </div>
+
+  <div class="notes-title">📌 Mes Notes</div>
+  <div class="notes-grid" id="notes"></div>
+
+  <div class="footer">
+    Projet Cloud - Notes App 🚀
+  </div>
+
+</div>
+
+<script>
+const API_URL = "https://note-keeper-api-bsgnh3dbd0etacbv.azurewebsites.net/api";
+
+window.onload = getNotes;
+
+// Charger les notes
+function getNotes() {
+  fetch(API_URL + "/getNotes")
+    .then(res => res.json())
+    .then(notes => {
+      const container = document.getElementById("notes");
+      container.innerHTML = "";
+
+      notes.forEach(note => {
+        const div = document.createElement("div");
+        div.className = "note";
+        div.innerHTML = `
+          <h3>${note.title}</h3>
+          <p>${note.content}</p>
+          <button class="btn-delete" onclick="deleteNote('${note.id}')">🗑️ Supprimer</button>
+        `;
+        container.appendChild(div);
+      });
+    });
+}
+
+// Ajouter une note
+function addNote() {
+  const title = document.getElementById("title").value;
+  const content = document.getElementById("content").value;
+
+  if (!title || !content) {
+    alert("Veuillez remplir tous les champs");
+    return;
+  }
+
+  fetch(API_URL + "/addNote", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title, content })
+  })
+  .then(() => {
+    document.getElementById("title").value = "";
+    document.getElementById("content").value = "";
+    getNotes();
+  });
+}
+
+// Supprimer une note
+function deleteNote(id) {
+  fetch(API_URL + "/deleteNote?id=" + id, {
+    method: "DELETE"
+  })
+  .then(() => getNotes());
+}
+</script>
+
+</body>
+</html>
